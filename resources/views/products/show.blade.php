@@ -46,7 +46,7 @@
             </div>
 
             <!-- Thumbnail Gallery -->
-            @if($product->variants->whereNotNull('image_path')->count() > 0)
+            @if($product->variants->count() > 0)
                 <div class="grid grid-cols-4 gap-2">
                     <!-- Main product image thumbnail -->
                     @if($product->image_path && $product->image_path !== 'products/' && file_exists(public_path('storage/' . $product->image_path)))
@@ -58,13 +58,19 @@
                         </button>
                     @endif
 
-                    <!-- Variant images -->
-                    @foreach($product->variants->whereNotNull('image_path') as $variant)
+                    <!-- Variant thumbnails -->
+                    @foreach($product->variants as $variant)
                         @if($variant->image_path && file_exists(public_path('storage/' . $variant->image_path)))
                             <button data-image-src="{{ asset('storage/' . $variant->image_path) }}"
                                     class="thumbnail-btn border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden hover:border-blue-500 transition-colors">
                                 <img src="{{ asset('storage/' . $variant->image_path) }}"
                                      alt="Variante {{ $variant->sku }}"
+                                     class="w-full h-20 object-cover">
+                            </button>
+                        @else
+                            <button class="thumbnail-btn border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden hover:border-blue-500 transition-colors">
+                                <img src="{{ asset('img/images.png') }}"
+                                     alt=""
                                      class="w-full h-20 object-cover">
                             </button>
                         @endif
@@ -98,13 +104,26 @@
                             </label>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($option->features as $feature)
-                                    <button type="button"
-                                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors option-btn"
-                                            data-option-id="{{ $option->id }}"
-                                            data-feature-id="{{ $feature->id }}"
-                                            data-value="{{ $feature->value }}">
-                                        {{ $feature->value }}
-                                    </button>
+                                    @if($option->type == 2)
+                                        <!-- Color option -->
+                                        <button type="button"
+                                                class="w-10 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all option-btn color-option-btn"
+                                                data-color="{{ $feature->value }}"
+                                                data-option-id="{{ $option->id }}"
+                                                data-feature-id="{{ $feature->id }}"
+                                                data-value="{{ $feature->value }}"
+                                                title="{{ $feature->description }}">
+                                        </button>
+                                    @else
+                                        <!-- Text option -->
+                                        <button type="button"
+                                                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors option-btn"
+                                                data-option-id="{{ $option->id }}"
+                                                data-feature-id="{{ $feature->id }}"
+                                                data-value="{{ $feature->value }}">
+                                            {{ $feature->value }}
+                                        </button>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>
@@ -220,6 +239,14 @@ function changeMainImage(src) {
 
 // Handle thumbnail clicks
 document.addEventListener('DOMContentLoaded', function() {
+    // Set background colors for color option buttons
+    document.querySelectorAll('.color-option-btn').forEach(button => {
+        const color = button.dataset.color;
+        if (color) {
+            button.style.backgroundColor = color;
+        }
+    });
+
     // Thumbnail image switching
     document.addEventListener('click', function(e) {
         if (e.target.closest('.thumbnail-btn')) {
@@ -236,6 +263,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const addToCartBtn = document.getElementById('add-to-cart-btn');
     const selectedOptions = new Map();
 
+    // Auto-select first option in each group
+    const optionGroups = new Map();
+    optionButtons.forEach(button => {
+        const optionId = button.dataset.optionId;
+        if (!optionGroups.has(optionId)) {
+            optionGroups.set(optionId, []);
+        }
+        optionGroups.get(optionId).push(button);
+    });
+
+    // Select first option in each group
+    optionGroups.forEach((buttons, optionId) => {
+        if (buttons.length > 0) {
+            const firstButton = buttons[0];
+            // Simulate click on first button
+            firstButton.click();
+        }
+    });
+
     optionButtons.forEach(button => {
         button.addEventListener('click', function() {
             const optionId = this.dataset.optionId;
@@ -244,13 +290,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Remove active class from other buttons in same option group
             document.querySelectorAll(`[data-option-id="${optionId}"]`).forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
-                btn.classList.add('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'bg-white', 'dark:bg-gray-800');
+                btn.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+                // For color buttons, remove the scale effect
+                if (btn.style.backgroundColor) {
+                    btn.classList.remove('scale-110');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    btn.classList.add('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'bg-white', 'dark:bg-gray-800');
+                }
             });
 
             // Add active class to clicked button
-            this.classList.remove('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'bg-white', 'dark:bg-gray-800');
-            this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            if (this.style.backgroundColor) {
+                // Color button
+                this.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'scale-110');
+            } else {
+                // Text button
+                this.classList.remove('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'bg-white', 'dark:bg-gray-800');
+                this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            }
 
             // Store selection
             selectedOptions.set(optionId, { featureId, value });

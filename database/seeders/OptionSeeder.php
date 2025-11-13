@@ -88,17 +88,20 @@ class OptionSeeder extends Seeder
 
         foreach($options as $option)
         {
-            $optionModel = Option::create([
+            $optionModel = Option::firstOrCreate([
                 'name' => $option['name'],
                 'type' => $option['type'],
             ]);
 
-            foreach($option['features'] as $feature)
-            {
-                $optionModel->features()->create([
-                    'value' => $feature['value'],
-                    'description' => $feature['description'],
-                ]);
+            // Only create features if they don't already exist for this option
+            if ($optionModel->features()->count() == 0) {
+                foreach($option['features'] as $feature)
+                {
+                    $optionModel->features()->create([
+                        'value' => $feature['value'],
+                        'description' => $feature['description'],
+                    ]);
+                }
             }
         }
     }

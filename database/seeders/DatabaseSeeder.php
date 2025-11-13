@@ -45,9 +45,8 @@ class DatabaseSeeder extends Seeder
 
         foreach ($products as $product) {
             $randomOptions = $options->random(rand(1, 3)); // Assign 1-3 random options per product
-            foreach ($randomOptions as $option) {
-                $product->options()->attach($option->id, ['value' => 'default']); // value can be updated later
-            }
+            $optionIds = $randomOptions->pluck('id')->toArray();
+            $product->options()->syncWithoutDetaching(array_fill_keys($optionIds, ['value' => 'default']));
         }
 
         // Create variants for products

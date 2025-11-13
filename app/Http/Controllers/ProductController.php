@@ -10,18 +10,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::with(['subcategory.category.family'])
-            ->paginate(12);
-
-        // Get categories with product counts, only including categories that have products
-        $categoriesWithCounts = \App\Models\Category::with(['family'])
-            ->select('categories.*')
-            ->selectRaw('(SELECT COUNT(*) FROM subcategories sc INNER JOIN products p ON sc.id = p.subcategory_id WHERE sc.category_id = categories.id) as products_count')
-            ->having('products_count', '>', 0)
-            ->orderBy('products_count', 'desc')
-            ->get();
-
-        return view('products.index', compact('products', 'categoriesWithCounts'));
+        return view('products.index');
     }
 
     public function show(Product $product)
