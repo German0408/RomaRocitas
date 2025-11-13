@@ -137,6 +137,16 @@ public function store(Request $request)
 - Custom components follow `<x-component-name>` naming
 - Use Tailwind CSS classes for styling
 
+### Theming Consistency
+- **Dark Mode Support**: All components must include `dark:` prefixed classes for dark mode compatibility
+- **Consistent Theme**: Authentication pages (Jetstream) and public storefront must use the same theme (currently dark theme)
+- **Color Standards**: Use consistent color schemes across all pages and components
+- **Theme Classes**: Always include both light and dark variants:
+  - Backgrounds: `bg-white dark:bg-gray-800`
+  - Text: `text-gray-900 dark:text-gray-100`
+  - Borders: `border-gray-200 dark:border-gray-700`
+  - Interactive elements: Include `dark:hover:` and `dark:focus:` states
+
 ### Form Patterns
 - Always include `@csrf` token
 - Use `old()` helper for form repopulation

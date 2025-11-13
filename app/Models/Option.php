@@ -13,7 +13,7 @@ class Option extends Model
     ];
 
     //Relacion muchos a muchos 
-    public function options(){
+    public function products(){
         return $this->belongsToMany(Product::class)->withPivot('value')->withTimestamps();
     }
 
