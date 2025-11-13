@@ -21,7 +21,7 @@ class ProductFactory extends Factory
             'sku' => $this->faker->unique()->numberBetween(100000,999999),
             'name' => $this->faker->sentence(),
             'description' => $this->faker->text(200),
-            'image_path' => 'products/'.$this->faker->image('public/storage/products',640,480,null,false),
+            'image_path' => null, // Will be handled in the view as missing image
             'price' => $this->faker->randomFloat(2,1,1000),
             'subcategory_id' => $this->faker->numberBetween(1,92),
         ];
