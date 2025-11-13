@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Variant;
+use App\Models\Option;
 use Illuminate\Support\Facades\Storage;
 //use Illuminate\Container\Attributes\Storage;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -22,7 +24,9 @@ class DatabaseSeeder extends Seeder
 
         // User::factory(10)->create();
 
-        User::factory()->create([
+        User::firstOrCreate([
+            'email' => 'germany0408@gmail.com'
+        ], [
             'name' => 'German',
             'email' => 'germany0408@gmail.com',
             'password' => bcrypt('German123456')
@@ -34,5 +38,30 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Product::factory(150)->create();
+
+        // Assign random options to products
+        $products = Product::all();
+        $options = \App\Models\Option::all();
+
+        foreach ($products as $product) {
+            $randomOptions = $options->random(rand(1, 3)); // Assign 1-3 random options per product
+            foreach ($randomOptions as $option) {
+                $product->options()->attach($option->id, ['value' => 'default']); // value can be updated later
+            }
+        }
+
+        // Create variants for products
+        foreach ($products as $product) {
+            $variantCount = rand(1, 3); // 1-3 variants per product
+            for ($i = 0; $i < $variantCount; $i++) {
+                $variant = Variant::factory()->create(['product_id' => $product->id]);
+
+                // Assign random features from the product's options
+                foreach ($product->options as $option) {
+                    $randomFeature = $option->features->random();
+                    $variant->features()->attach($randomFeature->id);
+                }
+            }
+        }
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Variant extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'sku',
@@ -19,7 +21,7 @@ class Variant extends Model
     }
 
     //Relacion muchos a muchos 
-    public function variants(){
-        return $this->belongsToMany(Feature::class)->withTimestamps();
+    public function features(){
+        return $this->belongsToMany(Feature::class, 'feature_variant', 'variants_id', 'features_id')->withTimestamps();
     }
 }
