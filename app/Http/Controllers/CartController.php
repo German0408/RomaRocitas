@@ -6,6 +6,7 @@ use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Gate;
 
 class CartController extends Controller
 {
@@ -60,6 +61,14 @@ class CartController extends Controller
             'quantity.min' => 'La cantidad debe ser al menos 1.',
         ]);
 
+        // Find the cart item and check ownership
+        $cartItem = \App\Models\CartItem::findOrFail($id);
+        $cart = $cartItem->cart;
+        
+        if (!Gate::allows('update', $cart)) {
+            abort(403, 'No autorizado para modificar este carrito.');
+        }
+
         try {
             $this->cartService->updateQuantity($id, $request->quantity);
             return redirect()->route('cart.index')->with('success', 'Cantidad actualizada.');
@@ -70,6 +79,14 @@ class CartController extends Controller
 
     public function destroy($id): RedirectResponse
     {
+        // Find the cart item and check ownership
+        $cartItem = \App\Models\CartItem::findOrFail($id);
+        $cart = $cartItem->cart;
+        
+        if (!Gate::allows('delete', $cart)) {
+            abort(403, 'No autorizado para modificar este carrito.');
+        }
+
         $this->cartService->removeItem($id);
         return redirect()->route('cart.index')->with('success', 'Producto eliminado del carrito.');
     }

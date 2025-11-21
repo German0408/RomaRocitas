@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Variant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class CartService
@@ -268,18 +269,29 @@ class CartService
 
     private function getPrice($productId, $variantId)
     {
-        $product = Product::find($productId);
-        return $product ? $product->price : 0;
+        $cacheKey = "product_price_{$productId}";
+        return Cache::remember($cacheKey, 3600, function () use ($productId) {
+            $product = Product::find($productId);
+            return $product ? $product->price : 0;
+        });
     }
 
     private function getName($productId, $variantId)
     {
-        $product = Product::find($productId);
-        $name = $product ? $product->name : 'Producto desconocido';
+        $cacheKey = "product_name_{$productId}";
+        $name = Cache::remember($cacheKey, 3600, function () use ($productId) {
+            $product = Product::find($productId);
+            return $product ? $product->name : 'Producto desconocido';
+        });
+
         if ($variantId) {
-            $variant = Variant::find($variantId);
-            if ($variant) {
-                $name .= ' - ' . $variant->sku; // or some variant description
+            $variantCacheKey = "variant_sku_{$variantId}";
+            $variantSku = Cache::remember($variantCacheKey, 3600, function () use ($variantId) {
+                $variant = Variant::find($variantId);
+                return $variant ? $variant->sku : '';
+            });
+            if ($variantSku) {
+                $name .= ' - ' . $variantSku;
             }
         }
         return $name;
@@ -297,7 +309,10 @@ class CartService
 
     private function getStock($productId, $variantId)
     {
-        $product = Product::find($productId);
-        return $product ? $product->stock : 0;
+        $cacheKey = "product_stock_{$productId}";
+        return Cache::remember($cacheKey, 1800, function () use ($productId) { // Cache for 30 minutes
+            $product = Product::find($productId);
+            return $product ? $product->stock : 0;
+        });
     }
 }
