@@ -23,7 +23,7 @@ class ProductFactory extends Factory
             'description' => $this->faker->text(200),
             'image_path' => null, // Will be handled in the view as missing image
             'price' => $this->faker->randomFloat(2,1,1000),
-            'subcategory_id' => $this->faker->numberBetween(1,92),
+            'subcategory_id' => \App\Models\Subcategory::inRandomOrder()->first()->id ?? 1,
         ];
 
     }

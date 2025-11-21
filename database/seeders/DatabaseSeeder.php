@@ -35,32 +35,33 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FamilySeeder::class,
             OptionSeeder::class,
+            AdminUserSeeder::class,
         ]);
 
-        Product::factory(150)->create();
+        Product::factory(10)->create();
 
         // Assign random options to products
-        $products = Product::all();
-        $options = \App\Models\Option::all();
+        // $products = Product::all();
+        // $options = \App\Models\Option::all();
 
-        foreach ($products as $product) {
-            $randomOptions = $options->random(rand(1, 3)); // Assign 1-3 random options per product
-            $optionIds = $randomOptions->pluck('id')->toArray();
-            $product->options()->syncWithoutDetaching(array_fill_keys($optionIds, ['value' => 'default']));
-        }
+        // foreach ($products as $product) {
+        //     $randomOptions = $options->random(rand(1, 3)); // Assign 1-3 random options per product
+        //     $optionIds = $randomOptions->pluck('id')->toArray();
+        //     $product->options()->syncWithoutDetaching(array_fill_keys($optionIds, ['value' => 'default']));
+        // }
 
         // Create variants for products
-        foreach ($products as $product) {
-            $variantCount = rand(1, 3); // 1-3 variants per product
-            for ($i = 0; $i < $variantCount; $i++) {
-                $variant = Variant::factory()->create(['product_id' => $product->id]);
+        // foreach ($products as $product) {
+        //     $variantCount = rand(1, 3); // 1-3 variants per product
+        //     for ($i = 0; $i < $variantCount; $i++) {
+        //         $variant = Variant::factory()->create(['product_id' => $product->id]);
 
-                // Assign random features from the product's options
-                foreach ($product->options as $option) {
-                    $randomFeature = $option->features->random();
-                    $variant->features()->attach($randomFeature->id);
-                }
-            }
-        }
+        //         // Assign random features from the product's options
+        //         foreach ($product->options as $option) {
+        //             $randomFeature = $option->features->random();
+        //             $variant->features()->attach($randomFeature->id);
+        //         }
+        //     }
+        // }
     }
 }

@@ -954,13 +954,13 @@ class FamilySeeder extends Seeder
                     'family_id' => $family->id,
                 ]);
 
-            }
+                foreach($subcategories as $subcategory){
+                    Subcategory::create([
+                        'name' => $subcategory,
+                        'category_id' => $category->id
+                    ]);
+                }
 
-            foreach($subcategories as $subcategory){
-                Subcategory::create([
-                    'name' => $subcategory,
-                    'category_id' => $category->id
-                ]);
             }
 
         }
