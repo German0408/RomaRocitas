@@ -29,7 +29,8 @@ class DatabaseSeeder extends Seeder
         ], [
             'name' => 'German',
             'email' => 'germany0408@gmail.com',
-            'password' => bcrypt('German123456')
+            'password' => bcrypt('German123456'),
+            'role' => \App\Models\User::ROLE_ADMIN,
         ]);
 
         $this->call([

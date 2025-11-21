@@ -40,6 +40,12 @@
             'route' => route('admin.products.index'),
             'active' => request()->routeIs('admin.products.index'),
         ],
+        [
+            'icon' => 'fa-solid fa-users',
+            'name' => 'Usuarios',
+            'route' => route('admin.users.index'),
+            'active' => request()->routeIs('admin.users.*'),
+        ],
     ];    
 @endphp
 
