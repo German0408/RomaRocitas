@@ -24,4 +24,9 @@ class Variant extends Model
     public function features(){
         return $this->belongsToMany(Feature::class, 'feature_variant', 'variants_id', 'features_id')->withTimestamps();
     }
+
+    // Cart items relationship
+    public function cartItems(){
+        return $this->hasMany(CartItem::class);
+    }
 }

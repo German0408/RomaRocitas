@@ -15,7 +15,8 @@ class Product extends Model
         'description',
         'image_path',
         'price',
-        'subcategory_id'
+        'subcategory_id',
+        'stock'
     ];
 
 
@@ -32,5 +33,10 @@ class Product extends Model
     //Relacion muchos a muchos 
     public function options(){
         return $this->belongsToMany(Option::class)->withPivot('value')->withTimestamps();
+    }
+
+    // Cart items relationship
+    public function cartItems(){
+        return $this->hasMany(CartItem::class);
     }
 }
