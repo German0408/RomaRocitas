@@ -40,6 +40,10 @@
 
         @stack('modals')
 
+        <!-- Global Components -->
+        @livewire('cart-drawer')
+        @livewire('toast')
+
         @livewireScripts
     </body>
 </html>

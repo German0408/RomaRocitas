@@ -47,10 +47,4 @@
             <p class="text-gray-500 dark:text-gray-400">Tu carrito está vacío.</p>
         </div>
     @endif
-
-    @error('cart')
-        <div class="mt-4 text-red-600 dark:text-red-400">
-            {{ $message }}
-        </div>
-    @enderror
 </div>

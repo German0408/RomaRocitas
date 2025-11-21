@@ -5,13 +5,15 @@ namespace App\Livewire;
 use App\Services\CartService;
 use Livewire\Component;
 
-class Cart extends Component
+class CartDrawer extends Component
 {
+    public $isOpen = false;
     public $items = [];
     public $total = 0;
     public $quantities = [];
 
     protected $cartService;
+    protected $listeners = ['open-cart-drawer' => 'openDrawer', 'cart-updated' => 'loadCart'];
 
     public function boot(CartService $cartService)
     {
@@ -21,6 +23,23 @@ class Cart extends Component
     public function mount()
     {
         $this->loadCart();
+    }
+
+    public function openDrawer()
+    {
+        $this->isOpen = true;
+        $this->loadCart();
+    }
+
+    public function closeDrawer()
+    {
+        $this->isOpen = false;
+    }
+
+    public function loadCart()
+    {
+        $this->items = $this->cartService->getItems();
+        $this->total = $this->cartService->getTotal();
         $this->quantities = collect($this->items)->pluck('quantity', function ($item, $key) {
             return $item['id'] ?? $key;
         })->toArray();
@@ -31,19 +50,6 @@ class Cart extends Component
         $this->updateQuantity($key, $value);
     }
 
-    public function addItem($productId, $variantId = null, $quantity = 1)
-    {
-        try {
-            $this->cartService->addItem($productId, $variantId, $quantity);
-            $this->loadCart();
-            $this->dispatch('cart-updated');
-            $this->dispatch('show-toast', ['message' => 'Producto añadido al carrito', 'type' => 'success']);
-        } catch (\Exception $e) {
-            $this->addError('cart', $e->getMessage());
-            $this->dispatch('show-toast', ['message' => $e->getMessage(), 'type' => 'error']);
-        }
-    }
-
     public function updateQuantity($key, $quantity)
     {
         try {
@@ -52,7 +58,6 @@ class Cart extends Component
             $this->dispatch('cart-updated');
             $this->dispatch('show-toast', ['message' => 'Cantidad actualizada', 'type' => 'success']);
         } catch (\Exception $e) {
-            $this->addError('cart', $e->getMessage());
             $this->dispatch('show-toast', ['message' => $e->getMessage(), 'type' => 'error']);
         }
     }
@@ -65,17 +70,8 @@ class Cart extends Component
         $this->dispatch('show-toast', ['message' => 'Producto eliminado', 'type' => 'success']);
     }
 
-    private function loadCart()
-    {
-        $this->items = $this->cartService->getItems();
-        $this->total = $this->cartService->getTotal();
-        $this->quantities = collect($this->items)->pluck('quantity', function ($item, $key) {
-            return $item['id'] ?? $key;
-        })->toArray();
-    }
-
     public function render()
     {
-        return view('livewire.cart');
+        return view('livewire.cart-drawer');
     }
 }

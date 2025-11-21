@@ -20,7 +20,24 @@ class CartService
             return $this->getDatabaseItems();
         }
 
-        return Session::get(self::CART_KEY, []);
+        return $this->getSessionItems();
+    }
+
+    private function getSessionItems()
+    {
+        // Try session first, then localStorage as fallback
+        $cart = Session::get(self::CART_KEY, []);
+        if (empty($cart)) {
+            $cart = $this->getLocalStorageCart();
+        }
+        return $cart;
+    }
+
+    private function getLocalStorageCart()
+    {
+        // This will be handled by JavaScript, but we can provide a server-side fallback
+        // For now, return empty array - JavaScript will handle localStorage
+        return [];
     }
 
     public function addItem($productId, $variantId = null, $quantity = 1)
@@ -110,7 +127,9 @@ class CartService
 
     private function getOrCreateUserCart()
     {
-        $cart = Auth::user()->cart;
+        // Try to find existing cart first
+        $cart = Cart::where('user_id', Auth::id())->first();
+        
         if (!$cart) {
             $cart = Cart::create([
                 'user_id' => Auth::id(),
@@ -123,6 +142,9 @@ class CartService
     private function getDatabaseItems()
     {
         $cart = $this->getOrCreateUserCart();
+        // Force fresh load of items relationship
+        $cart->load('items');
+        
         return $cart->items->map(function ($item) {
             return [
                 'id' => $item->id,
@@ -191,7 +213,7 @@ class CartService
 
     private function addSessionItem($productId, $variantId, $quantity)
     {
-        $cart = $this->getItems();
+        $cart = $this->getSessionItems();
         $key = $this->findItemKey($productId, $variantId);
         if ($key !== false) {
             $cart[$key]['quantity'] += $quantity;
@@ -205,26 +227,32 @@ class CartService
             ];
         }
         $this->validateStock($cart);
-        Session::put(self::CART_KEY, $cart);
+        $this->saveCartToSessionAndLocalStorage($cart);
     }
 
     private function updateSessionQuantity($key, $quantity)
     {
-        $cart = $this->getItems();
+        $cart = $this->getSessionItems();
         if (isset($cart[$key])) {
             $cart[$key]['quantity'] = $quantity;
             $this->validateStock($cart);
-            Session::put(self::CART_KEY, $cart);
+            $this->saveCartToSessionAndLocalStorage($cart);
         }
     }
 
     private function removeSessionItem($key)
     {
-        $cart = $this->getItems();
+        $cart = $this->getSessionItems();
         if (isset($cart[$key])) {
             unset($cart[$key]);
-            Session::put(self::CART_KEY, array_values($cart)); // reindex
+            $this->saveCartToSessionAndLocalStorage(array_values($cart)); // reindex
         }
+    }
+
+    private function saveCartToSessionAndLocalStorage($cart)
+    {
+        Session::put(self::CART_KEY, $cart);
+        // localStorage will be handled by JavaScript
     }
 
     private function findItemKey($productId, $variantId)

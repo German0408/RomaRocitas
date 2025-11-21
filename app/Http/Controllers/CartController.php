@@ -73,4 +73,29 @@ class CartController extends Controller
         $this->cartService->removeItem($id);
         return redirect()->route('cart.index')->with('success', 'Producto eliminado del carrito.');
     }
+
+    public function sync(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'cart' => 'required|array',
+            'cart.*.product_id' => 'required|exists:products,id',
+            'cart.*.variant_id' => 'nullable|exists:variants,id',
+            'cart.*.quantity' => 'required|integer|min:1',
+            'cart.*.price' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $this->cartService->mergeGuestCart();
+            foreach ($request->cart as $item) {
+                $this->cartService->addItem(
+                    $item['product_id'],
+                    $item['variant_id'] ?? null,
+                    $item['quantity']
+                );
+            }
+            return response()->json(['success' => true, 'message' => 'Carrito sincronizado']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
 }
