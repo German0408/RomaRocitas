@@ -9,7 +9,7 @@ Route::get('/', [ProductController::class, 'index'])->name('home');
 Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
 Route::get('/productos/{product}', [ProductController::class, 'show'])->name('products.show');
 
-Route::resource('cart', CartController::class)->only(['index', 'store', 'update', 'destroy']);
+Route::resource('cart', CartController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('handle.cart');
 
 Route::middleware([
     'auth:sanctum',

@@ -50,7 +50,7 @@ class CartController extends Controller
         }
     }
 
-    public function update(Request $request, $key): RedirectResponse
+    public function update(Request $request, $id): RedirectResponse
     {
         $request->validate([
             'quantity' => 'required|integer|min:1',
@@ -61,16 +61,16 @@ class CartController extends Controller
         ]);
 
         try {
-            $this->cartService->updateQuantity($key, $request->quantity);
+            $this->cartService->updateQuantity($id, $request->quantity);
             return redirect()->route('cart.index')->with('success', 'Cantidad actualizada.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors($e->getMessage());
         }
     }
 
-    public function destroy($key): RedirectResponse
+    public function destroy($id): RedirectResponse
     {
-        $this->cartService->removeItem($key);
+        $this->cartService->removeItem($id);
         return redirect()->route('cart.index')->with('success', 'Producto eliminado del carrito.');
     }
 }

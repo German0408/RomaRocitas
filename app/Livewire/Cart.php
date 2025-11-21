@@ -21,7 +21,9 @@ class Cart extends Component
     public function mount()
     {
         $this->loadCart();
-        $this->quantities = array_column($this->items, 'quantity');
+        $this->quantities = collect($this->items)->pluck('quantity', function ($item, $key) {
+            return $item['id'] ?? $key;
+        })->toArray();
     }
 
     public function updatedQuantities($value, $key)
@@ -62,7 +64,9 @@ class Cart extends Component
     {
         $this->items = $this->cartService->getItems();
         $this->total = $this->cartService->getTotal();
-        $this->quantities = array_column($this->items, 'quantity');
+        $this->quantities = collect($this->items)->pluck('quantity', function ($item, $key) {
+            return $item['id'] ?? $key;
+        })->toArray();
     }
 
     public function render()
