@@ -41,15 +41,10 @@ class CartItem extends Model
     protected static function booted()
     {
         static::saving(function ($cartItem) {
-            if ($cartItem->variant) {
-                // If variant exists, check variant stock (assuming variant has stock)
-                // For now, assume product stock
-            } else {
-                // Check product stock
-                $product = $cartItem->product;
-                if ($cartItem->quantity > $product->stock) {
-                    throw new \Exception('Insufficient stock for product: ' . $product->name);
-                }
+            // Check product stock
+            $product = $cartItem->product;
+            if ($cartItem->quantity > $product->stock) {
+                throw new \Exception('Insufficient stock for product: ' . $product->name);
             }
         });
     }

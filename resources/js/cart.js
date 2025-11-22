@@ -38,11 +38,14 @@ class CartPersistence {
     saveToLocalStorage() {
         try {
             // Get current cart data from Livewire components
+            if (!window.Livewire || !window.Livewire.components) {
+                return; // Livewire not ready
+            }
             const cartComponents = document.querySelectorAll('[wire\\:id]');
             cartComponents.forEach(component => {
                 const componentId = component.getAttribute('wire:id');
-                if (componentId && window.livewire.components[componentId]) {
-                    const componentData = window.livewire.components[componentId].data;
+                if (componentId && window.Livewire.components[componentId]) {
+                    const componentData = window.Livewire.components[componentId].data;
                     if (componentData.items) {
                         localStorage.setItem(this.storageKey, JSON.stringify(componentData.items));
                         return;
