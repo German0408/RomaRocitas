@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OptionController;
 use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\AuditLogsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function(){
@@ -23,4 +24,6 @@ Route::resource('subcategories', SubcategoryController::class);
 Route::resource('products', ProductsController::class);
 
 Route::resource('users', UsersController::class);
+
+Route::resource('audit-logs', AuditLogsController::class)->only(['index']);
 

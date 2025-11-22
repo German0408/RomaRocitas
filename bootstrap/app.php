@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function(){
-           Route::middleware('web', 'auth', 'admin')
+           Route::middleware('web', 'auth', 'admin', 'admin.session.timeout')
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(base_path('routes/admin.php'));
@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'handle.cart' => \App\Http\Middleware\HandleCart::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin.session.timeout' => \App\Http\Middleware\AdminSessionTimeout::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

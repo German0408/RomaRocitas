@@ -46,6 +46,12 @@
             'route' => route('admin.users.index'),
             'active' => request()->routeIs('admin.users.*'),
         ],
+        [
+            'icon' => 'fa-solid fa-history',
+            'name' => 'Audit Logs',
+            'route' => route('admin.audit-logs.index'),
+            'active' => request()->routeIs('admin.audit-logs.*'),
+        ],
     ];    
 @endphp
 

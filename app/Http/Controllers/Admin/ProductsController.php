@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Storage;
 
 class ProductsController extends Controller
@@ -71,6 +72,15 @@ class ProductsController extends Controller
     {
         //
         Storage::delete($product->image_path);
+
+        // Log activity
+        AuditLogger::log('delete_product', Product::class, $product->id, [
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'description' => $product->description,
+            'price' => $product->price,
+            'image_path' => $product->image_path,
+        ], null);
 
         $product->delete();
 

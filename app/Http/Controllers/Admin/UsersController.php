@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use App\Services\AuditLogger;
 use Illuminate\Validation\Rule;
 
 class UsersController extends Controller
@@ -58,7 +58,7 @@ class UsersController extends Controller
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_CUSTOMER])],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -66,12 +66,10 @@ class UsersController extends Controller
         ]);
 
         // Log activity
-        Log::info('User created', [
-            'admin_id' => Auth::id(),
-            'admin_name' => Auth::user()->name,
-            'action' => 'create',
-            'target_user_email' => $request->email,
-            'target_user_role' => $request->role,
+        AuditLogger::log('create_user', User::class, $user->id, null, [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
         ]);
 
         session()->flash('swal', [
@@ -124,14 +122,14 @@ class UsersController extends Controller
         }
 
         // Log activity
-        Log::info('User updated', [
-            'admin_id' => Auth::id(),
-            'admin_name' => Auth::user()->name,
-            'action' => 'update',
-            'target_user_id' => $user->id,
-            'target_user_email' => $user->email,
-            'old_role' => $oldRole,
-            'new_role' => $request->role,
+        AuditLogger::log('update_user', User::class, $user->id, [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $oldRole,
+        ], [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
             'password_changed' => $request->filled('password'),
         ]);
 
@@ -160,14 +158,11 @@ class UsersController extends Controller
         }
 
         // Log activity
-        Log::info('User deleted', [
-            'admin_id' => Auth::id(),
-            'admin_name' => Auth::user()->name,
-            'action' => 'delete',
-            'target_user_id' => $user->id,
-            'target_user_email' => $user->email,
-            'target_user_role' => $user->role,
-        ]);
+        AuditLogger::log('delete_user', User::class, $user->id, [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ], null);
 
         $user->delete();
 
