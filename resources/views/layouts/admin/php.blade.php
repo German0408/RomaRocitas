@@ -74,10 +74,10 @@
     
     @stack('js')
 
-    @if (session('swal'))
+    @if($swal = session('swal'))
 
         <script>
-            Swal.fire({!! json_encode(session('swal')) !!});
+            Swal.fire(<?php echo json_encode($swal); ?>);
         </script>
         
     @endif

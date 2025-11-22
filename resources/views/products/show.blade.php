@@ -37,7 +37,6 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Product Image Gallery -->
         <div class="space-y-4">
-            <!-- Main Image -->
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                 <img id="main-image"
                      src="{{ $product->image_path && $product->image_path !== 'products/' && file_exists(public_path('storage/' . $product->image_path)) ? asset('storage/' . $product->image_path) : asset('img/images.png') }}"
@@ -86,57 +85,8 @@
                 <p class="text-lg text-gray-600 dark:text-gray-400">SKU: {{ $product->sku }}</p>
             </div>
 
-            <div>
-                <span class="text-4xl font-bold text-gray-900 dark:text-gray-100">
-                    ${{ number_format($product->price, 0, ',', '.') }}
-                </span>
-            </div>
-
-            <!-- Variant/Option Selection -->
-            @if($product->options->count() > 0)
-                <div class="space-y-4">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Opciones del Producto</h3>
-
-                    @foreach($product->options as $option)
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ $option->name }}
-                            </label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($option->features as $feature)
-                                    @if($option->type == 2)
-                                        <!-- Color option -->
-                                        <button type="button"
-                                                class="w-10 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all option-btn color-option-btn"
-                                                data-color="{{ $feature->value }}"
-                                                data-option-id="{{ $option->id }}"
-                                                data-feature-id="{{ $feature->id }}"
-                                                data-value="{{ $feature->value }}"
-                                                title="{{ $feature->description }}">
-                                        </button>
-                                    @else
-                                        <!-- Text option -->
-                                        <button type="button"
-                                                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors option-btn"
-                                                data-option-id="{{ $option->id }}"
-                                                data-feature-id="{{ $feature->id }}"
-                                                data-value="{{ $feature->value }}">
-                                            {{ $feature->value }}
-                                        </button>
-                                    @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-
-            <!-- Add to Cart Button -->
-            <button id="add-to-cart-btn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled>
-                Agregar al Carrito
-            </button>
+            <!-- Add to Cart Component -->
+            @livewire('add-to-cart', ['productId' => $product->id])
         </div>
     </div>
 
@@ -239,7 +189,7 @@ function changeMainImage(src) {
 
 // Handle thumbnail clicks
 document.addEventListener('DOMContentLoaded', function() {
-    // Set background colors for color option buttons
+    // Set background colors for color option buttons (if any remain, but they shouldn't)
     document.querySelectorAll('.color-option-btn').forEach(button => {
         const color = button.dataset.color;
         if (color) {
@@ -257,80 +207,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+});
 
-    // Variant/Option selection logic
-    const optionButtons = document.querySelectorAll('.option-btn');
-    const addToCartBtn = document.getElementById('add-to-cart-btn');
-    const selectedOptions = new Map();
-
-    // Auto-select first option in each group
-    const optionGroups = new Map();
-    optionButtons.forEach(button => {
-        const optionId = button.dataset.optionId;
-        if (!optionGroups.has(optionId)) {
-            optionGroups.set(optionId, []);
-        }
-        optionGroups.get(optionId).push(button);
+// Listen for Livewire events to update main image
+document.addEventListener('livewire:loaded', function() {
+    Livewire.on('update-main-image', (data) => {
+        changeMainImage(data.src);
     });
-
-    // Select first option in each group
-    optionGroups.forEach((buttons, optionId) => {
-        if (buttons.length > 0) {
-            const firstButton = buttons[0];
-            // Simulate click on first button
-            firstButton.click();
-        }
-    });
-
-    optionButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const optionId = this.dataset.optionId;
-            const featureId = this.dataset.featureId;
-            const value = this.dataset.value;
-
-            // Remove active class from other buttons in same option group
-            document.querySelectorAll(`[data-option-id="${optionId}"]`).forEach(btn => {
-                btn.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-                // For color buttons, remove the scale effect
-                if (btn.style.backgroundColor) {
-                    btn.classList.remove('scale-110');
-                } else {
-                    btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
-                    btn.classList.add('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'bg-white', 'dark:bg-gray-800');
-                }
-            });
-
-            // Add active class to clicked button
-            if (this.style.backgroundColor) {
-                // Color button
-                this.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'scale-110');
-            } else {
-                // Text button
-                this.classList.remove('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'bg-white', 'dark:bg-gray-800');
-                this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
-            }
-
-            // Store selection
-            selectedOptions.set(optionId, { featureId, value });
-
-            // Enable/disable add to cart button based on selections
-            const uniqueOptions = new Set(Array.from(document.querySelectorAll('[data-option-id]')).map(btn => btn.dataset.optionId));
-
-            if (selectedOptions.size === uniqueOptions.size) {
-                addToCartBtn.disabled = false;
-                addToCartBtn.textContent = 'Agregar al Carrito';
-            } else {
-                addToCartBtn.disabled = true;
-                addToCartBtn.textContent = 'Selecciona todas las opciones';
-            }
-        });
-    });
-
-    // Initially disable add to cart if there are options to select
-    if (optionButtons.length > 0) {
-        addToCartBtn.disabled = true;
-        addToCartBtn.textContent = 'Selecciona todas las opciones';
-    }
 });
 </script>
 @endsection

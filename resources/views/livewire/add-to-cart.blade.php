@@ -33,13 +33,24 @@
                     <label class="block text-sm font-medium mb-1">{{ $option->name }}</label>
                     <div class="flex flex-wrap gap-2">
                         @foreach($option->features as $feature)
-                            <button
-                                type="button"
-                                wire:click="$set('selectedFeatures.{{ $option->id }}', {{ $feature->id }})"
-                                class="px-3 py-1 border rounded text-sm hover:bg-blue-50 {{ isset($selectedFeatures[$option->id]) && $selectedFeatures[$option->id] == $feature->id ? 'bg-blue-100 border-blue-300' : 'border-gray-300' }}"
-                            >
-                                {{ $feature->value }}
-                            </button>
+                            @if($option->type == 2)
+                                <!-- Color option -->
+                                <button
+                                    type="button"
+                                    wire:click="$set('selectedFeatures.{{ $option->id }}', {{ $feature->id }})"
+                                    class="w-10 h-10 rounded-full border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all {{ isset($selectedFeatures[$option->id]) && $selectedFeatures[$option->id] == $feature->id ? 'ring-2 ring-blue-500 ring-offset-2 scale-110' : 'border-gray-300 dark:border-gray-600' }}"
+                                    :style="`background-color: {{ $feature->value }}`"
+                                    title="{{ $feature->description }}">
+                                </button>
+                            @else
+                                <!-- Text option -->
+                                <button
+                                    type="button"
+                                    wire:click="$set('selectedFeatures.{{ $option->id }}', {{ $feature->id }})"
+                                    class="px-3 py-1 border rounded text-sm hover:bg-blue-50 {{ isset($selectedFeatures[$option->id]) && $selectedFeatures[$option->id] == $feature->id ? 'bg-blue-100 border-blue-300' : 'border-gray-300' }}">
+                                    {{ $feature->value }}
+                                </button>
+                            @endif
                         @endforeach
                     </div>
                 </div>

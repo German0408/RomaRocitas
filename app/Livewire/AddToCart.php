@@ -19,6 +19,7 @@ class AddToCart extends Component
     public $currentPrice;
     public $availableStock = 0;
     public $isAdding = false;
+    public $currentImage;
 
     protected $listeners = ['variantSelected' => 'setSelectedVariant'];
 
@@ -26,6 +27,9 @@ class AddToCart extends Component
     {
         $this->productId = $productId;
         $this->loadProduct();
+        $this->currentImage = $this->product->image_path && $this->product->image_path !== 'products/' && file_exists(public_path('storage/' . $this->product->image_path))
+            ? asset('storage/' . $this->product->image_path)
+            : asset('img/images.png');
         $this->updateVariantAndPrice();
     }
 
@@ -64,6 +68,18 @@ class AddToCart extends Component
 
         $this->selectedVariantId = $matchingVariant ? $matchingVariant->id : null;
         $this->availableStock = $matchingVariant ? $this->product->stock : $this->product->stock; // Assuming stock is on product, not variant
+
+        // Update current image if variant has one
+        if ($matchingVariant && $matchingVariant->image_path && file_exists(public_path('storage/' . $matchingVariant->image_path))) {
+            $this->currentImage = asset('storage/' . $matchingVariant->image_path);
+            $this->dispatch('update-main-image', ['src' => $this->currentImage]);
+        } elseif (!$matchingVariant) {
+            // Reset to product image if no variant selected
+            $this->currentImage = $this->product->image_path && $this->product->image_path !== 'products/' && file_exists(public_path('storage/' . $this->product->image_path))
+                ? asset('storage/' . $this->product->image_path)
+                : asset('img/images.png');
+            $this->dispatch('update-main-image', ['src' => $this->currentImage]);
+        }
     }
 
     public function setSelectedVariant($variantId)
