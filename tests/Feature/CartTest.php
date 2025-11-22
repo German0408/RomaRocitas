@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Family;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class CartTest extends TestCase
@@ -251,5 +252,92 @@ class CartTest extends TestCase
         $persistedItems = $newCartService->getItems();
         $this->assertCount(1, $persistedItems);
         $this->assertEquals(2, $persistedItems[0]['quantity']);
+    }
+
+    public function test_add_to_cart_livewire_component()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $family = Family::create(['name' => 'Test Family']);
+        $category = Category::create(['name' => 'Test Category', 'family_id' => $family->id]);
+        $subcategory = Subcategory::create(['name' => 'Test Subcategory', 'category_id' => $category->id]);
+        $product = Product::create([
+            'sku' => 'TEST007',
+            'name' => 'Test Product 7',
+            'description' => 'Test description 7',
+            'price' => 100.00,
+            'subcategory_id' => $subcategory->id,
+            'stock' => 10
+        ]);
+
+        // Test the Livewire component
+        Livewire::test(\App\Livewire\AddToCart::class, ['productId' => $product->id])
+            ->assertSet('productId', $product->id)
+            ->assertSet('quantity', 1)
+            ->assertSet('availableStock', 10)
+            ->call('addToCart')
+            ->assertEmitted('cart-updated')
+            ->assertEmitted('show-toast');
+
+        // Verify item was added to cart
+        $cartService = app(\App\Services\CartService::class);
+        $items = $cartService->getItems();
+        $this->assertCount(1, $items);
+        $this->assertEquals($product->id, $items[0]['product_id']);
+        $this->assertEquals(1, $items[0]['quantity']);
+    }
+
+    public function test_add_to_cart_with_variant_selection()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $family = Family::create(['name' => 'Test Family']);
+        $category = Category::create(['name' => 'Test Category', 'family_id' => $family->id]);
+        $subcategory = Subcategory::create(['name' => 'Test Subcategory', 'category_id' => $category->id]);
+        $product = Product::create([
+            'sku' => 'TEST008',
+            'name' => 'Test Product 8',
+            'description' => 'Test description 8',
+            'price' => 150.00,
+            'subcategory_id' => $subcategory->id,
+            'stock' => 10
+        ]);
+
+        // Create option and features
+        $option = \App\Models\Option::create(['name' => 'Color', 'type' => 'select']);
+        $feature1 = \App\Models\Feature::create(['value' => 'Rojo', 'option_id' => $option->id]);
+        $feature2 = \App\Models\Feature::create(['value' => 'Azul', 'option_id' => $option->id]);
+
+        // Associate option with product
+        $product->options()->attach($option->id, ['value' => '']);
+
+        // Create variants
+        $variant1 = \App\Models\Variant::create([
+            'sku' => 'TEST008-RED',
+            'product_id' => $product->id
+        ]);
+        $variant2 = \App\Models\Variant::create([
+            'sku' => 'TEST008-BLUE',
+            'product_id' => $product->id
+        ]);
+
+        // Associate features with variants
+        $variant1->features()->attach($feature1->id);
+        $variant2->features()->attach($feature2->id);
+
+        // Test selecting a variant
+        Livewire::test(\App\Livewire\AddToCart::class, ['productId' => $product->id])
+            ->set('selectedFeatures', [$option->id => $feature1->id])
+            ->assertSet('selectedVariantId', $variant1->id)
+            ->call('addToCart')
+            ->assertEmitted('cart-updated');
+
+        // Verify variant was added
+        $cartService = app(\App\Services\CartService::class);
+        $items = $cartService->getItems();
+        $this->assertCount(1, $items);
+        $this->assertEquals($variant1->id, $items[0]['variant_id']);
     }
 }

@@ -371,6 +371,15 @@
     "You may not leave a team that you created.": "No se puede abandonar un equipo que usted creó.",
     "Your email address is unverified.": "Su dirección de correo electrónico no está verificada.",
     "cart": {
-        "insufficient_stock": "Stock insuficiente. Disponible: :stock"
+        "insufficient_stock": "Stock insuficiente. Disponible: :stock",
+        "product_added": "Producto agregado al carrito",
+        "select_option": "Selecciona una opción para :option",
+        "variant_not_found": "Variante no encontrada para las opciones seleccionadas",
+        "quantity": "Cantidad",
+        "available": "Disponible: :stock",
+        "options": "Opciones",
+        "add_to_cart": "Agregar al Carrito",
+        "adding": "Agregando...",
+        "selected_variant": "Variante seleccionada: :sku"
     }
 }
