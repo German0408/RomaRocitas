@@ -380,6 +380,7 @@
         "options": "Opciones",
         "add_to_cart": "Agregar al Carrito",
         "adding": "Agregando...",
-        "selected_variant": "Variante seleccionada: :sku"
+        "selected_variant": "Variante seleccionada: :sku",
+        
     }
 }

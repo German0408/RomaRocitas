@@ -26,15 +26,18 @@
             {{ Str::limit($product->description, 100) }}
         </p>
 
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-2">
             <span class="text-xl font-bold text-gray-900 dark:text-gray-100">
                 ${{ number_format($product->price, 0, ',', '.') }}
             </span>
 
             <a href="{{ route('products.show', $product) }}"
-               class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+               class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Ver Detalles
             </a>
         </div>
+
+        <!-- Add to Cart -->
+        @livewire('add-to-cart', ['productId' => $product->id])
     </div>
 </div>

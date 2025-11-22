@@ -59,7 +59,7 @@ class Index extends Component
 
     public function render()
     {
-        $query = Product::with(['subcategory.category.family']);
+        $query = Product::with(['subcategory.category.family', 'options']);
 
         // Search
         if ($this->search) {
