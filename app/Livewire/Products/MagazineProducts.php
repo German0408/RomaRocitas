@@ -123,6 +123,14 @@ class MagazineProducts extends Component
         });
     }
 
+    public function loadMore()
+    {
+        if ($this->hasMorePages && !$this->loading) {
+            $this->currentPage++;
+            $this->loadProducts();
+        }
+    }
+
     public function render()
     {
         $categories = $this->getCategories();

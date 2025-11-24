@@ -146,11 +146,11 @@
 
             // Initialize PageFlip
             pageFlipInstance = new PageFlip(magazineElement, {
-                width: isMobile ? 300 : 600, // Single product width for mobile, double for desktop
-                height: 400,
+                width: isMobile ? 320 : 800, // Single product for mobile, two products for desktop
+                height: 450,
                 size: isMobile ? 'fixed' : 'stretch',
                 minWidth: 200,
-                maxWidth: 1000,
+                maxWidth: 1200,
                 minHeight: 300,
                 maxHeight: 600,
                 showCover: false,
@@ -217,7 +217,10 @@
                 const newIsMobile = window.innerWidth < 768;
                 if (newIsMobile !== isMobile) {
                     // Reinitialize on layout change
-                    location.reload();
+                    if (pageFlipInstance) {
+                        pageFlipInstance.destroy();
+                    }
+                    initializeMagazine();
                 }
             });
         }
@@ -225,10 +228,19 @@
         function createPages(products, isMobile) {
             const pages = [];
 
-            // For Phase 3, use single product per page
-            products.forEach(product => {
-                pages.push(createProductPageHTML(product, isMobile));
-            });
+            if (isMobile) {
+                // Mobile: single product per page
+                products.forEach(product => {
+                    pages.push(createProductPageHTML(product, true));
+                });
+            } else {
+                // Desktop: two products per page (magazine spread)
+                for (let i = 0; i < products.length; i += 2) {
+                    const product1 = products[i];
+                    const product2 = products[i + 1] || null; // Handle odd number of products
+                    pages.push(createDualProductPageHTML(product1, product2));
+                }
+            }
 
             return pages;
         }
@@ -250,6 +262,49 @@
                         </div>
                         ${isMobile ? `<button class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product.id}">Ver detalles</button>` : ''}
                     </div>
+                </div>
+            `;
+        }
+
+        function createDualProductPageHTML(product1, product2) {
+            const product2HTML = product2 ? `
+                <div class="flex-1 ml-4">
+                    <div class="product-image mb-4 flex-1">
+                        <img src="${product2.image_path || '/images/placeholder.jpg'}"
+                             alt="${product2.name}"
+                             class="w-full h-full object-cover rounded">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product2.name}</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${product2.description}</p>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xl font-bold text-blue-600">$${product2.price}</span>
+                            <span class="text-sm text-gray-500">Stock: ${product2.stock}</span>
+                        </div>
+                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product2.id}">Ver detalles</button>
+                    </div>
+                </div>
+            ` : '<div class="flex-1 ml-4"></div>'; // Empty space for odd products
+
+            return `
+                <div class="magazine-page bg-white dark:bg-gray-800 p-6 rounded shadow h-full flex">
+                    <div class="flex-1">
+                        <div class="product-image mb-4 flex-1">
+                            <img src="${product1.image_path || '/images/placeholder.jpg'}"
+                                 alt="${product1.name}"
+                                 class="w-full h-full object-cover rounded">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product1.name}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${product1.description}</p>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xl font-bold text-blue-600">$${product1.price}</span>
+                                <span class="text-sm text-gray-500">Stock: ${product1.stock}</span>
+                            </div>
+                            <button class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product1.id}">Ver detalles</button>
+                        </div>
+                    </div>
+                    ${product2HTML}
                 </div>
             `;
         }
