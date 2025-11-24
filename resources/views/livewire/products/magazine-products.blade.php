@@ -36,14 +36,14 @@
     <!-- Magazine Container -->
     <div class="magazine-container relative">
         <!-- Navigation Controls -->
-        <div class="magazine-nav flex justify-between items-center mb-4">
-            <button id="prev-page" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+        <div class="magazine-nav flex justify-between items-center mb-4" role="navigation" aria-label="Navegación de revista">
+            <button id="prev-page" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Página anterior">
                 ← Anterior
             </button>
-            <div class="page-indicator text-sm text-gray-600 dark:text-gray-400">
+            <div class="page-indicator text-sm text-gray-600 dark:text-gray-400" aria-live="polite">
                 Página <span id="current-page">1</span> de <span id="total-pages">1</span>
             </div>
-            <button id="next-page" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="next-page" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Página siguiente">
                 Siguiente →
             </button>
         </div>
@@ -128,7 +128,6 @@
 
             const products = JSON.parse(magazineElement.dataset.products || '[]');
             if (products.length === 0) return;
-            if (!magazineElement) return;
 
             const prevBtn = document.getElementById('prev-page');
             const nextBtn = document.getElementById('next-page');
@@ -144,23 +143,33 @@
             // Create pages from products
             const pages = createPages(products, isMobile);
 
-            // Initialize PageFlip
-            pageFlipInstance = new PageFlip(magazineElement, {
-                width: isMobile ? 320 : 800, // Single product for mobile, two products for desktop
-                height: 450,
-                size: isMobile ? 'fixed' : 'stretch',
-                minWidth: 200,
-                maxWidth: 1200,
-                minHeight: 300,
-                maxHeight: 600,
-                showCover: false,
-                useMouseEvents: true,
-                usePortrait: isMobile,
-                mobileScrollSupport: true
-            });
+            // Initialize PageFlip with error handling
+            try {
+                pageFlipInstance = new PageFlip(magazineElement, {
+                    width: isMobile ? 320 : 800,
+                    height: 450,
+                    size: isMobile ? 'fixed' : 'stretch',
+                    minWidth: 200,
+                    maxWidth: 1200,
+                    minHeight: 300,
+                    maxHeight: 600,
+                    showCover: false,
+                    useMouseEvents: true,
+                    usePortrait: isMobile,
+                    mobileScrollSupport: true,
+                    flippingTime: 600, // Smooth animation
+                    drawShadow: true,
+                    autoSize: true
+                });
 
-            // Load pages
-            pageFlipInstance.loadFromHTML(pages);
+                // Load pages
+                pageFlipInstance.loadFromHTML(pages);
+            } catch (error) {
+                console.error('Error initializing PageFlip:', error);
+                // Fallback: show products in a simple list
+                showFallbackView(products, magazineElement);
+                return;
+            }
 
             // Update navigation
             function updateNavigation() {
@@ -176,7 +185,19 @@
             }
 
             // Event listeners
-            pageFlipInstance.on('flip', updateNavigation);
+            pageFlipInstance.on('flip', (e) => {
+                updateNavigation();
+                preloadAdjacentPages(e.data);
+                trackInteraction('flip', { from: e.data.oldPage, to: e.data.newPage });
+            });
+
+            pageFlipInstance.on('changeState', (e) => {
+                trackInteraction('state_change', { state: e.data });
+            });
+
+            pageFlipInstance.on('changeOrientation', (e) => {
+                trackInteraction('orientation_change', { orientation: e.data });
+            });
 
             if (prevBtn) {
                 prevBtn.addEventListener('click', () => {
@@ -247,20 +268,21 @@
 
         function createProductPageHTML(product, isMobile = false) {
             return `
-                <div class="magazine-page bg-white dark:bg-gray-800 p-6 rounded shadow h-full flex flex-col">
+                <div class="magazine-page bg-white dark:bg-gray-800 p-6 rounded shadow h-full flex flex-col" role="article" aria-labelledby="product-title-${product.id}">
                     <div class="product-image mb-4 flex-1">
                         <img src="${product.image_path || '/images/placeholder.jpg'}"
                              alt="${product.name}"
+                             loading="lazy"
                              class="w-full h-full object-cover rounded">
                     </div>
                     <div class="product-info">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product.name}</h3>
+                        <h3 id="product-title-${product.id}" class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product.name}</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${product.description}</p>
                         <div class="flex justify-between items-center">
                             <span class="text-xl font-bold text-blue-600">$${product.price}</span>
                             <span class="text-sm text-gray-500">Stock: ${product.stock}</span>
                         </div>
-                        ${isMobile ? `<button class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product.id}">Ver detalles</button>` : ''}
+                        ${isMobile ? `<button class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product.id}" aria-label="Ver detalles de ${product.name}">Ver detalles</button>` : ''}
                     </div>
                 </div>
             `;
@@ -268,40 +290,42 @@
 
         function createDualProductPageHTML(product1, product2) {
             const product2HTML = product2 ? `
-                <div class="flex-1 ml-4">
+                <div class="flex-1 ml-4" role="article" aria-labelledby="product-title-${product2.id}">
                     <div class="product-image mb-4 flex-1">
                         <img src="${product2.image_path || '/images/placeholder.jpg'}"
                              alt="${product2.name}"
+                             loading="lazy"
                              class="w-full h-full object-cover rounded">
                     </div>
                     <div class="product-info">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product2.name}</h3>
+                        <h3 id="product-title-${product2.id}" class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product2.name}</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${product2.description}</p>
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-xl font-bold text-blue-600">$${product2.price}</span>
                             <span class="text-sm text-gray-500">Stock: ${product2.stock}</span>
                         </div>
-                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product2.id}">Ver detalles</button>
+                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product2.id}" aria-label="Ver detalles de ${product2.name}">Ver detalles</button>
                     </div>
                 </div>
             ` : '<div class="flex-1 ml-4"></div>'; // Empty space for odd products
 
             return `
-                <div class="magazine-page bg-white dark:bg-gray-800 p-6 rounded shadow h-full flex">
-                    <div class="flex-1">
+                <div class="magazine-page bg-white dark:bg-gray-800 p-6 rounded shadow h-full flex" role="region" aria-label="Página de revista con productos">
+                    <div class="flex-1" role="article" aria-labelledby="product-title-${product1.id}">
                         <div class="product-image mb-4 flex-1">
                             <img src="${product1.image_path || '/images/placeholder.jpg'}"
                                  alt="${product1.name}"
+                                 loading="lazy"
                                  class="w-full h-full object-cover rounded">
                         </div>
                         <div class="product-info">
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product1.name}</h3>
+                            <h3 id="product-title-${product1.id}" class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">${product1.name}</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${product1.description}</p>
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-xl font-bold text-blue-600">$${product1.price}</span>
                                 <span class="text-sm text-gray-500">Stock: ${product1.stock}</span>
                             </div>
-                            <button class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product1.id}">Ver detalles</button>
+                            <button class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 view-details" data-product-id="${product1.id}" aria-label="Ver detalles de ${product1.name}">Ver detalles</button>
                         </div>
                     </div>
                     ${product2HTML}
@@ -335,6 +359,55 @@
             modal.classList.remove('hidden');
         }
 
+        function showFallbackView(products, container) {
+            container.innerHTML = `
+                <div class="fallback-view grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                    ${products.map(product => `
+                        <div class="product-card bg-white dark:bg-gray-800 p-4 rounded shadow" role="article">
+                            <img src="${product.image_path || '/images/placeholder.jpg'}" alt="${product.name}" loading="lazy" class="w-full h-48 object-cover rounded mb-4">
+                            <h3 class="text-lg font-bold mb-2">${product.name}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${product.description}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xl font-bold text-blue-600">$${product.price}</span>
+                                <button class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700" aria-label="Ver detalles de ${product.name}">Ver detalles</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function preloadAdjacentPages(pageData) {
+            const currentIndex = pageData.newPage;
+            const preloadIndices = [currentIndex - 1, currentIndex + 1].filter(i => i >= 0 && i < pageFlipInstance.getPageCount());
+
+            preloadIndices.forEach(index => {
+                const pageElement = pageFlipInstance.getPage(index);
+                if (pageElement) {
+                    const images = pageElement.querySelectorAll('img');
+                    images.forEach(img => {
+                        if (!img.complete && img.src) {
+                            const preloadImg = new Image();
+                            preloadImg.src = img.src;
+                        }
+                    });
+                }
+            });
+        }
+
+        function trackInteraction(eventType, data) {
+            // Analytics tracking - can be integrated with Google Analytics or similar
+            console.log('Magazine interaction:', eventType, data);
+
+            // Example: Send to Google Analytics if available
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'magazine_' + eventType, {
+                    event_category: 'magazine',
+                    event_label: JSON.stringify(data)
+                });
+            }
+        }
+
         // Close modal
         document.getElementById('close-modal').addEventListener('click', () => {
             document.getElementById('product-modal').classList.add('hidden');
@@ -346,5 +419,7 @@
             }
         });
     </script>
+    @endpush
+</div>
     @endpush
 </div>
