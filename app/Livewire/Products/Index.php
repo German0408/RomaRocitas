@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Cache;
 
 class Index extends Component
 {
@@ -59,7 +60,7 @@ class Index extends Component
 
     public function render()
     {
-        $query = Product::with(['subcategory.category.family', 'options']);
+        $query = Product::with(['subcategory.category']); // Removed 'family' and 'options' for performance
 
         // Search
         if ($this->search) {
@@ -90,13 +91,15 @@ class Index extends Component
 
         $products = $query->paginate(12);
 
-        // Get categories with product counts
-        $categoriesWithCounts = Category::with(['family'])
-            ->select('categories.*')
-            ->selectRaw('(SELECT COUNT(*) FROM subcategories sc INNER JOIN products p ON sc.id = p.subcategory_id WHERE sc.category_id = categories.id) as products_count')
-            ->having('products_count', '>', 0)
-            ->orderBy('products_count', 'desc')
-            ->get();
+        // Get categories with product counts - with caching
+        $categoriesWithCounts = Cache::remember('categories_with_counts', 3600, function () { // Cache for 1 hour
+            return Category::with(['family'])
+                ->select('categories.*')
+                ->selectRaw('(SELECT COUNT(*) FROM subcategories sc INNER JOIN products p ON sc.id = p.subcategory_id WHERE sc.category_id = categories.id) as products_count')
+                ->having('products_count', '>', 0)
+                ->orderBy('products_count', 'desc')
+                ->get();
+        });
 
         return view('livewire.products.index', compact('products', 'categoriesWithCounts'));
     }
