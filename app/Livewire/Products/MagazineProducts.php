@@ -95,12 +95,12 @@ class MagazineProducts extends Component
         $this->loading = false;
     }
 
-    public function loadMore()
+    public function clearFilters()
     {
-        if ($this->hasMorePages && !$this->loading) {
-            $this->currentPage++;
-            $this->loadProducts();
-        }
+        $this->search = '';
+        $this->category_id = '';
+        $this->resetPagination();
+        $this->loadProducts();
     }
 
     public function getCategories()

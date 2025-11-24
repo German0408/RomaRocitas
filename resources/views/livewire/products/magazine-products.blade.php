@@ -5,6 +5,12 @@
 
         <!-- Search and Category Filter -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Filtros</h2>
+                <button wire:click="clearFilters" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                    Limpiar filtros
+                </button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Search -->
                 <div>
@@ -44,6 +50,22 @@
 
         <!-- Magazine Flip Container -->
         <div id="magazine" class="magazine mx-auto shadow-2xl" data-products="{{ json_encode($products) }}"></div>
+
+        <!-- No Products Message -->
+        @if(empty($products) && !$loading)
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-5.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No se encontraron productos</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">No hay productos que coincidan con los filtros aplicados.</p>
+                <div class="mt-6">
+                    <button wire:click="clearFilters" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Limpiar filtros
+                    </button>
+                </div>
+            </div>
+        @endif
 
         <!-- Loading Indicator -->
         <div wire:loading class="text-center py-8">
