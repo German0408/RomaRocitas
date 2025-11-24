@@ -3,5 +3,5 @@
 @section('title', 'Productos')
 
 @section('content')
-@livewire('products.index')
+@livewire('products.magazine-products')
 @endsection

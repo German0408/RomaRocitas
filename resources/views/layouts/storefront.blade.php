@@ -56,6 +56,8 @@
         @livewire('cart-drawer')
         @livewire('toast')
 
+        @stack('scripts')
+
         @livewireScripts
     </body>
 </html>
