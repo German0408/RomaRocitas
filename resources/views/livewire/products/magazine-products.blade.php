@@ -421,5 +421,3 @@
     </script>
     @endpush
 </div>
-    @endpush
-</div>
