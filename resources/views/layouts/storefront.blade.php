@@ -31,6 +31,8 @@
                     </div>
                     <div class="flex items-center space-x-4">
                         <a href="{{ route('home') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Inicio</a>
+                        @livewire('mini-cart')
+                        @livewire('storefront-login')
                         <!-- Add more navigation items later -->
                     </div>
                 </div>

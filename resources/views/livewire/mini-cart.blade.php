@@ -59,9 +59,15 @@
                         <a href="{{ route('cart.index') }}" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md text-center text-sm font-medium transition duration-150">
                             Ver Carrito
                         </a>
-                        <a href="#" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-center text-sm font-medium transition duration-150">
-                            Pagar
-                        </a>
+                        @auth
+                            <a href="#" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-center text-sm font-medium transition duration-150">
+                                Pagar
+                            </a>
+                        @else
+                            <button wire:click="$dispatch('open-login-modal')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-center text-sm font-medium transition duration-150">
+                                Iniciar Sesión para Pagar
+                            </button>
+                        @endauth
                     </div>
                 </div>
             @else

@@ -277,8 +277,8 @@ class CartTest extends TestCase
             ->assertSet('quantity', 1)
             ->assertSet('availableStock', 10)
             ->call('addToCart')
-            ->assertEmitted('cart-updated')
-            ->assertEmitted('show-toast');
+            ->assertDispatched('cart-updated')
+            ->assertDispatched('show-toast');
 
         // Verify item was added to cart
         $cartService = app(\App\Services\CartService::class);
@@ -306,9 +306,9 @@ class CartTest extends TestCase
         ]);
 
         // Create option and features
-        $option = \App\Models\Option::create(['name' => 'Color', 'type' => 'select']);
-        $feature1 = \App\Models\Feature::create(['value' => 'Rojo', 'option_id' => $option->id]);
-        $feature2 = \App\Models\Feature::create(['value' => 'Azul', 'option_id' => $option->id]);
+        $option = \App\Models\Option::create(['name' => 'Color', 'type' => 1]);
+        $feature1 = \App\Models\Feature::create(['value' => 'Rojo', 'description' => 'Color rojo', 'option_id' => $option->id]);
+        $feature2 = \App\Models\Feature::create(['value' => 'Azul', 'description' => 'Color azul', 'option_id' => $option->id]);
 
         // Associate option with product
         $product->options()->attach($option->id, ['value' => '']);
@@ -316,10 +316,12 @@ class CartTest extends TestCase
         // Create variants
         $variant1 = \App\Models\Variant::create([
             'sku' => 'TEST008-RED',
+            'image_path' => 'test-red.jpg',
             'product_id' => $product->id
         ]);
         $variant2 = \App\Models\Variant::create([
             'sku' => 'TEST008-BLUE',
+            'image_path' => 'test-blue.jpg',
             'product_id' => $product->id
         ]);
 
@@ -332,7 +334,7 @@ class CartTest extends TestCase
             ->set('selectedFeatures', [$option->id => $feature1->id])
             ->assertSet('selectedVariantId', $variant1->id)
             ->call('addToCart')
-            ->assertEmitted('cart-updated');
+            ->assertDispatched('cart-updated');
 
         // Verify variant was added
         $cartService = app(\App\Services\CartService::class);

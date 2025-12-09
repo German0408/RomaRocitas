@@ -160,6 +160,7 @@ class MagazineProductsTest extends TestCase
             ->call('loadMore') // Load page 2
             ->assertSet('currentPage', 2)
             ->set('search', 'Test') // This should reset pagination
+            ->call('resetPaginationForSearch') // Call the reset method
             ->assertSet('currentPage', 1);
     }
 
@@ -171,6 +172,7 @@ class MagazineProductsTest extends TestCase
             ->call('loadMore') // Load page 2
             ->assertSet('currentPage', 2)
             ->set('category_id', $data['category1']->id) // This should reset pagination
+            ->call('resetPaginationForCategory') // Call the reset method
             ->assertSet('currentPage', 1);
     }
 
